@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f6d365; /* Fondo amarillo suave */
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #fff;
+            margin-top: 30px;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        table {
+            width: 80%;
+            margin: 30px auto;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #d3d3d3;
+        }
+    </style>
+</head>
+<body>
+    <h1>CRUD - Crear, Leer, Actualizar, Eliminar</h1>
+
+    <button onclick="addItem()">Agregar</button>
+    <p>Lista de elementos:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="itemsTableBody">
+            <!-- Aquí se cargarán los elementos -->
+        </tbody>
+    </table>
+
+    <script>
+        async function loadItems() {
+            const response = await fetch('/items');
+            const items = await response.json();
+            const tableBody = document.getElementById('itemsTableBody');
+            tableBody.innerHTML = '';
+
+            items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index}</td>
+                    <td>${item.name}</td>
+                    <td>
+                        <button onclick="editItem(${index}, '${item.name}')">Editar</button>
+                        <button onclick="deleteItem(${index})">Eliminar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        async function addItem() {
+            const newItemName = prompt('Ingrese el nombre del nuevo elemento:');
+            if (!newItemName) return;
+
+            const response = await fetch('/items', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newItemName }),
+            });
+
+            if (response.status === 201) {
+                alert('Elemento agregado correctamente');
+                loadItems();
+            } else {
+                alert('Error al agregar el elemento');
+            }
+        }
+
+        async function editItem(id, currentName) {
+            const updatedName = prompt('Ingrese el nuevo nombre del elemento:', currentName);
+            if (!updatedName) return;
+
+            const response = await fetch(`/items/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: updatedName }),
+            });
+
+            if (response.ok) {
+                alert('Elemento actualizado correctamente');
+                loadItems();
+            } else {
+                alert('Error al actualizar el elemento');
+            }
+        }
+
+        async function deleteItem(id) {
+            const response = await fetch(`/items/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.status === 204) {
+                alert('Elemento eliminado correctamente');
+                loadItems();
+            } else {
+                alert('Error al eliminar el elemento');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadItems);
+    </script>
+</body>
+</html>
